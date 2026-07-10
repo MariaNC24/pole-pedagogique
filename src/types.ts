@@ -1,4 +1,4 @@
-export type Role = "admin" | "editor" | "viewer";
+export type Role = "admin" | "editor" | "viewer" | "pole_administratif";
 
 export interface Profile {
   id: string;
@@ -18,8 +18,19 @@ export interface Groupe {
   date_fin: string | null;
   formateur_defaut: string | null;
   actif: boolean;
+  deleted_at: string | null;
   created_at: string;
 }
+
+export const MODES_FINANCEMENT = [
+  "CPF",
+  "HORS CPF",
+  "OPCO",
+  "ENTREPRISE",
+  "FRANCE TRAVAIL",
+  "AUTRES",
+] as const;
+export type ModeFinancement = (typeof MODES_FINANCEMENT)[number];
 
 export interface Apprenant {
   id: string;
@@ -30,7 +41,16 @@ export interface Apprenant {
   certification_visee: string | null;
   date_entree: string | null;
   date_sortie: string | null;
+  date_session_edof: string | null;
+  mode_financement: ModeFinancement | null;
+  niveau_cecrl_initial: string | null;
+  niveau_cecrl_vise: string | null;
+  telephone: string | null;
+  email: string | null;
+  date_naissance: string | null;
+  heures_totales_prevues: number | null;
   actif: boolean;
+  deleted_at: string | null;
   created_at: string;
 }
 
@@ -70,6 +90,8 @@ export interface TotauxApprenant {
   formateur: string | null;
   total_jours_presence: number;
   total_heures: number;
+  heures_totales_prevues: number | null;
+  heures_restantes: number | null;
 }
 
 export interface Parametres {
@@ -96,6 +118,21 @@ export interface DocumentApprenant {
   type_mime: string | null;
   uploaded_by: string | null;
   uploaded_at: string;
+}
+
+export interface DocumentAdministratif {
+  id: string;
+  apprenant_id: string;
+  nom_document: string;
+  statut: "manquant" | "recu" | "a_mettre_a_jour";
+  commentaire: string | null;
+  chemin_storage: string | null;
+  nom_fichier: string | null;
+  taille_octets: number | null;
+  type_mime: string | null;
+  fichier_ajoute_at: string | null;
+  updated_by: string | null;
+  updated_at: string;
 }
 
 export interface AuditLogEntry {

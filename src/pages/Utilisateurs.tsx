@@ -16,6 +16,7 @@ const roleLabels: Record<Role, string> = {
   admin: "Administrateur",
   editor: "Éditeur",
   viewer: "Lecteur",
+  pole_administratif: "Pôle administratif",
 };
 
 export default function Utilisateurs() {
@@ -115,6 +116,9 @@ export default function Utilisateurs() {
             <select className="input" value={role} onChange={(e) => setRole(e.target.value as Role)}>
               <option value="viewer">Lecteur (consultation uniquement)</option>
               <option value="editor">Éditeur (peut saisir/modifier)</option>
+              <option value="pole_administratif">
+                Pôle administratif (consulte tout, modifie seulement les dossiers admin.)
+              </option>
               <option value="admin">Administrateur (accès complet)</option>
             </select>
           </div>
@@ -206,6 +210,7 @@ export default function Utilisateurs() {
                       >
                         <option value="viewer">Lecteur</option>
                         <option value="editor">Éditeur</option>
+                        <option value="pole_administratif">Pôle administratif</option>
                         <option value="admin">Administrateur</option>
                       </select>
                     </td>

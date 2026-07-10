@@ -2,23 +2,28 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
+const ALL_ROLES = ["admin", "editor", "viewer", "pole_administratif"];
+
 const navItems = [
-  { to: "/", label: "Tableau de bord", roles: ["admin", "editor", "viewer"] },
-  { to: "/apprenants", label: "Apprenants", roles: ["admin", "editor", "viewer"] },
-  { to: "/groupes", label: "Groupes", roles: ["admin", "editor", "viewer"] },
-  { to: "/evaluations", label: "Suivi pédagogique", roles: ["admin", "editor", "viewer"] },
-  { to: "/presences", label: "Présences", roles: ["admin", "editor", "viewer"] },
-  { to: "/calendrier", label: "Calendrier", roles: ["admin", "editor", "viewer"] },
-  { to: "/journal", label: "Journal de suivi", roles: ["admin", "editor", "viewer"] },
-  { to: "/statistiques", label: "Statistiques", roles: ["admin", "editor", "viewer"] },
+  { to: "/", label: "Tableau de bord", roles: ALL_ROLES },
+  { to: "/apprenants", label: "Apprenants", roles: ALL_ROLES },
+  { to: "/groupes", label: "Groupes", roles: ALL_ROLES },
+  { to: "/evaluations", label: "Suivi pédagogique", roles: ALL_ROLES },
+  { to: "/presences", label: "Présences", roles: ALL_ROLES },
+  { to: "/calendrier", label: "Calendrier", roles: ALL_ROLES },
+  { to: "/journal", label: "Journal de suivi", roles: ALL_ROLES },
+  { to: "/dossiers-administratifs", label: "Dossiers administratifs", roles: ALL_ROLES },
+  { to: "/statistiques", label: "Statistiques", roles: ALL_ROLES },
   { to: "/utilisateurs", label: "Équipe", roles: ["admin"] },
-  { to: "/historique", label: "Historique", roles: ["admin", "editor", "viewer"], ownerOnly: true },
+  { to: "/corbeille", label: "Corbeille", roles: ["admin"] },
+  { to: "/historique", label: "Historique", roles: ALL_ROLES, ownerOnly: true },
 ];
 
 const roleLabels: Record<string, string> = {
   admin: "Administrateur",
   editor: "Éditeur",
   viewer: "Lecteur",
+  pole_administratif: "Pôle administratif",
 };
 
 export default function Layout() {

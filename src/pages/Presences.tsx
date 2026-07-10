@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import RoleGuard from "../components/RoleGuard";
-import type { Apprenant, Presence, TotauxApprenant } from "../types";
+import type { Apprenant, Groupe, Presence, TotauxApprenant } from "../types";
 
 const STATUTS: { value: Presence["statut"]; label: string }[] = [
   { value: "present", label: "Présent" },
@@ -30,19 +30,24 @@ export default function Presences() {
 
   const [date, setDate] = useState(todayISO());
   const [apprenants, setApprenants] = useState<Apprenant[]>([]);
+  const [groupes, setGroupes] = useState<Groupe[]>([]);
   const [presences, setPresences] = useState<Record<string, Presence>>({});
   const [totaux, setTotaux] = useState<TotauxApprenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
   const [searchTotaux, setSearchTotaux] = useState("");
+  const [searchApprenant, setSearchApprenant] = useState("");
+  const [filterGroupe, setFilterGroupe] = useState("");
 
   async function loadApprenantsEtPresences() {
     setLoading(true);
-    const [{ data: apps }, { data: pres }] = await Promise.all([
-      supabase.from("apprenants").select("*").eq("actif", true).order("nom_complet"),
+    const [{ data: apps }, { data: gr }, { data: pres }] = await Promise.all([
+      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true).order("nom_complet"),
+      supabase.from("groupes").select("*").is("deleted_at", null).order("nom"),
       supabase.from("presences").select("*").eq("date", date),
     ]);
     setApprenants((apps as Apprenant[]) ?? []);
+    setGroupes((gr as Groupe[]) ?? []);
     const map: Record<string, Presence> = {};
     ((pres as Presence[]) ?? []).forEach((p) => (map[p.apprenant_id] = p));
     setPresences(map);
@@ -140,6 +145,15 @@ export default function Presences() {
     [totaux, searchTotaux]
   );
 
+  const apprenantsConcernes = useMemo(() => {
+    return apprenants.filter((a) => {
+      if (filterGroupe && a.groupe_id !== filterGroupe) return false;
+      if (searchApprenant && !a.nom_complet.toLowerCase().includes(searchApprenant.toLowerCase()))
+        return false;
+      return true;
+    });
+  }, [apprenants, filterGroupe, searchApprenant]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -153,11 +167,35 @@ export default function Presences() {
           />
         </div>
 
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <input
+            className="input max-w-xs"
+            placeholder="Rechercher un apprenant..."
+            value={searchApprenant}
+            onChange={(e) => setSearchApprenant(e.target.value)}
+          />
+          <select
+            className="input max-w-xs"
+            value={filterGroupe}
+            onChange={(e) => setFilterGroupe(e.target.value)}
+          >
+            <option value="">Tous les groupes</option>
+            {groupes.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.nom}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-slate-400">
+            Seuls les apprenants affichés ci-dessous seront concernés par l'émargement du jour.
+          </span>
+        </div>
+
         <div className="card overflow-x-auto p-0">
           {loading ? (
             <p className="p-4 text-sm text-slate-400">Chargement...</p>
-          ) : apprenants.length === 0 ? (
-            <p className="p-4 text-sm text-slate-400">Aucun apprenant actif.</p>
+          ) : apprenantsConcernes.length === 0 ? (
+            <p className="p-4 text-sm text-slate-400">Aucun apprenant ne correspond à ce filtre.</p>
           ) : (
             <table className="w-full min-w-[820px] text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
@@ -172,7 +210,7 @@ export default function Presences() {
                 </tr>
               </thead>
               <tbody>
-                {apprenants.map((a) => {
+                {apprenantsConcernes.map((a) => {
                   const p = presences[a.id];
                   return (
                     <tr key={a.id} className="border-t border-slate-100">
@@ -268,7 +306,9 @@ export default function Presences() {
                 <th className="px-4 py-2">Apprenant</th>
                 <th className="px-4 py-2">Groupe / Mois</th>
                 <th className="px-4 py-2">Jours de présence</th>
-                <th className="px-4 py-2">Total heures</th>
+                <th className="px-4 py-2">Heures faites</th>
+                <th className="px-4 py-2">Heures totales à faire</th>
+                <th className="px-4 py-2">Heures restantes</th>
               </tr>
             </thead>
             <tbody>
@@ -278,6 +318,12 @@ export default function Presences() {
                   <td className="px-4 py-2 text-slate-600">{t.groupe || "—"}</td>
                   <td className="px-4 py-2">{t.total_jours_presence}</td>
                   <td className="px-4 py-2">{Number(t.total_heures).toFixed(2)} h</td>
+                  <td className="px-4 py-2">
+                    {t.heures_totales_prevues != null ? `${Number(t.heures_totales_prevues).toFixed(2)} h` : "—"}
+                  </td>
+                  <td className={`px-4 py-2 ${t.heures_restantes != null && t.heures_restantes < 0 ? "text-red-600" : ""}`}>
+                    {t.heures_restantes != null ? `${Number(t.heures_restantes).toFixed(2)} h` : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>

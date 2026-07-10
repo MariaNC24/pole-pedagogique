@@ -70,8 +70,8 @@ export default function Statistiques() {
     async function load() {
       setLoading(true);
       const [{ data: apps }, { data: gr }, { data: evals }, { data: tot }] = await Promise.all([
-        supabase.from("apprenants").select("*").eq("actif", true),
-        supabase.from("groupes").select("*"),
+        supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true),
+        supabase.from("groupes").select("*").is("deleted_at", null),
         supabase.from("evaluations").select("*"),
         supabase.from("vue_totaux_apprenants").select("*"),
       ]);

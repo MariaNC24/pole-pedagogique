@@ -22,7 +22,7 @@ export default function Evaluations() {
   async function loadAll() {
     setLoading(true);
     const [{ data: apps }, { data: evals }] = await Promise.all([
-      supabase.from("apprenants").select("*").eq("actif", true).order("nom_complet"),
+      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true).order("nom_complet"),
       supabase.from("evaluations").select("*").order("date_prevue", { ascending: false }),
     ]);
     setApprenants((apps as Apprenant[]) ?? []);

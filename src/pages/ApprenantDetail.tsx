@@ -133,7 +133,7 @@ export default function ApprenantDetail() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <div className="card">
           <p className="text-2xl font-semibold text-brand-600">{totaux?.total_jours_presence ?? 0}</p>
           <p className="text-sm text-slate-500">Jours de présence</p>
@@ -142,12 +142,77 @@ export default function ApprenantDetail() {
           <p className="text-2xl font-semibold text-brand-600">
             {Number(totaux?.total_heures ?? 0).toFixed(2)} h
           </p>
-          <p className="text-sm text-slate-500">Total heures</p>
+          <p className="text-sm text-slate-500">Heures faites</p>
         </div>
         <div className="card">
-          <p className="text-2xl font-semibold text-brand-600">{evaluations.length}</p>
-          <p className="text-sm text-slate-500">Évaluations enregistrées</p>
+          <p className="text-2xl font-semibold text-slate-700">
+            {totaux?.heures_totales_prevues != null ? `${Number(totaux.heures_totales_prevues).toFixed(2)} h` : "—"}
+          </p>
+          <p className="text-sm text-slate-500">Heures totales à faire</p>
         </div>
+        <div className="card">
+          <p
+            className={`text-2xl font-semibold ${
+              totaux?.heures_restantes != null && totaux.heures_restantes < 0
+                ? "text-red-600"
+                : "text-brand-600"
+            }`}
+          >
+            {totaux?.heures_restantes != null ? `${Number(totaux.heures_restantes).toFixed(2)} h` : "—"}
+          </p>
+          <p className="text-sm text-slate-500">Heures restantes</p>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="mb-3 font-medium text-slate-800">Informations</h2>
+        <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-slate-400">Niveau CECRL initial</dt>
+            <dd className="text-slate-700">{apprenant.niveau_cecrl_initial || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Niveau CECRL visé</dt>
+            <dd className="text-slate-700">{apprenant.niveau_cecrl_vise || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Certification visée</dt>
+            <dd className="text-slate-700">{apprenant.certification_visee || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Téléphone</dt>
+            <dd className="text-slate-700">{apprenant.telephone || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">E-mail</dt>
+            <dd className="text-slate-700">{apprenant.email || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Date de naissance</dt>
+            <dd className="text-slate-700">{apprenant.date_naissance || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Date d'entrée en formation</dt>
+            <dd className="text-slate-700">{apprenant.date_entree || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Date de sortie de formation</dt>
+            <dd className="text-slate-700">{apprenant.date_sortie || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Date de session EDOF</dt>
+            <dd className="text-slate-700">{apprenant.date_session_edof || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Mode de financement</dt>
+            <dd className="text-slate-700">{apprenant.mode_financement || "—"}</dd>
+          </div>
+        </dl>
+        <RoleGuard allow={["admin", "editor"]}>
+          <p className="mt-3 text-xs text-slate-400">
+            Pour modifier ces informations, utilisez « Modifier » depuis la liste des apprenants.
+          </p>
+        </RoleGuard>
       </div>
 
       <div className="card">

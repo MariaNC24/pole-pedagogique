@@ -175,8 +175,12 @@ create trigger trg_audit_groupes
 
 -- ----------------------------------------------------------------------------
 -- 8. Mettre à jour la vue des totaux (ajout groupe structuré + formateur)
+--    (on la supprime d'abord : on ne peut pas réordonner les colonnes d'une
+--    vue existante avec CREATE OR REPLACE VIEW)
 -- ----------------------------------------------------------------------------
-create or replace view public.vue_totaux_apprenants as
+drop view if exists public.vue_totaux_apprenants;
+
+create view public.vue_totaux_apprenants as
 select
   a.id as apprenant_id,
   a.nom_complet,

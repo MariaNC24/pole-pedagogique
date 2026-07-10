@@ -45,6 +45,18 @@ Cela crée : les apprenants, les évaluations (suivi pédagogique), les présenc
    ```
    Cela lui donne accès à la page **Historique**, qui reste invisible pour tous les autres comptes (y compris les autres administrateurs).
 
+## Étape 2 ter — Ajouts v3 (pôle administratif, dossiers, corbeille)
+
+Dans **SQL Editor**, nouvelle requête : copier-coller le contenu de `supabase/migrations/0003_ajouts2.sql`, puis **Run**.
+
+Cela ajoute : le rôle « Pôle administratif » (consultation de tout le site, modification limitée à l'onglet Dossiers administratifs), les nouveaux champs de la fiche apprenant (dates, financement, CECRL initial/visé, contact, heures totales à faire), la corbeille (suppression réversible pendant 15 jours) et l'onglet Dossiers administratifs.
+
+## Étape 2 quater — Ajouts v4 (PDF sur les dossiers administratifs)
+
+Dans **SQL Editor**, nouvelle requête : copier-coller le contenu de `supabase/migrations/0004_ajouts3.sql`, puis **Run**.
+
+Cela ajoute la possibilité de joindre un PDF à chaque document suivi dans l'onglet Dossiers administratifs (bucket de stockage dédié, créé automatiquement).
+
 ## Étape 3 — Configurer l'authentification
 
 1. Menu **Authentication > Providers** : vérifier que **Email** est activé (c'est le cas par défaut).
@@ -134,6 +146,12 @@ Le site est maintenant en ligne, accessible depuis un ordinateur ou un télépho
 - **Journal de suivi** : onglet séparé pour des notes internes par apprenant, indépendantes des évaluations.
 - **Statistiques** : taux de réussite, niveau CECRL moyen et heures moyennes, par groupe et par formateur.
 - **Historique** : liste complète des créations/modifications/suppressions, visible uniquement par la personne désignée comme « propriétaire » (Clara) — même les autres administrateurs n'y ont pas accès.
+- **Pôle administratif** (nouveau rôle) : consulte l'intégralité du site (comme un lecteur), mais ne peut modifier que l'onglet **Dossiers administratifs**.
+- **Dossiers administratifs** : pour chaque apprenant, une liste de documents à suivre choisis dans une liste déroulante (avec option "+ Nouveau document..." pour en créer un), statut manquant / reçu / à mettre à jour, et possibilité de joindre le PDF correspondant à chaque document. La date de naissance est affichée à côté du nom pour distinguer les homonymes. Visible par tous, modifiable par les administrateurs et le pôle administratif.
+- **Corbeille** : supprimer un apprenant ou un groupe ne l'efface pas tout de suite — il reste 15 jours dans la Corbeille (menu admin), avec un bouton pour le restaurer ou le supprimer définitivement avant l'échéance.
+- **Filtre par groupe** : sur la page Apprenants et sur la feuille de présence, un menu déroulant permet de filtrer par groupe (mois/année).
+- **Heures totales et heures restantes** : en créant ou modifiant un apprenant, vous pouvez indiquer le nombre d'heures total qu'il doit faire ; le site calcule automatiquement combien il lui reste, à partir des présences enregistrées.
+- **Calendrier enrichi** : affiche aussi les séances de cours (jours où une présence a été enregistrée) ; cliquer sur un jour montre qui était présent, absent ou en retard ce jour-là.
 
 ## À propos de la limite gratuite Supabase
 

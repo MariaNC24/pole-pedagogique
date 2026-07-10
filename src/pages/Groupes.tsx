@@ -22,7 +22,7 @@ export default function Groupes() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("groupes").select("*").order("nom");
+    const { data } = await supabase.from("groupes").select("*").is("deleted_at", null).order("nom");
     setGroupes((data as Groupe[]) ?? []);
     setLoading(false);
   }
@@ -75,6 +75,12 @@ export default function Groupes() {
 
   async function toggleActif(g: Groupe) {
     await supabase.from("groupes").update({ actif: !g.actif }).eq("id", g.id);
+    load();
+  }
+
+  async function envoyerCorbeille(g: Groupe) {
+    if (!confirm(`Envoyer le groupe "${g.nom}" à la corbeille ? Récupérable pendant 15 jours.`)) return;
+    await supabase.from("groupes").update({ deleted_at: new Date().toISOString() }).eq("id", g.id);
     load();
   }
 
@@ -187,8 +193,11 @@ export default function Groupes() {
                       </button>
                     </RoleGuard>
                     <RoleGuard allow={["admin"]}>
-                      <button className="text-slate-500 hover:underline" onClick={() => toggleActif(g)}>
+                      <button className="mr-3 text-slate-500 hover:underline" onClick={() => toggleActif(g)}>
                         {g.actif ? "Désactiver" : "Réactiver"}
+                      </button>
+                      <button className="text-red-500 hover:underline" onClick={() => envoyerCorbeille(g)}>
+                        Supprimer
                       </button>
                     </RoleGuard>
                   </td>

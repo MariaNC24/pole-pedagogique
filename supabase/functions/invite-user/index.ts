@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     if (!email || !nom || !prenom || !role) {
       return json({ error: "Champs requis : email, nom, prenom, role." }, 400);
     }
-    if (!["admin", "editor", "viewer"].includes(role)) {
+    if (!["admin", "editor", "viewer", "pole_administratif"].includes(role)) {
       return json({ error: "Rôle invalide." }, 400);
     }
 

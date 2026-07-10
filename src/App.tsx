@@ -11,6 +11,8 @@ import Calendrier from "./pages/Calendrier";
 import Journal from "./pages/Journal";
 import Statistiques from "./pages/Statistiques";
 import Historique from "./pages/Historique";
+import DossiersAdministratifs from "./pages/DossiersAdministratifs";
+import Corbeille from "./pages/Corbeille";
 import Utilisateurs from "./pages/Utilisateurs";
 import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
@@ -39,6 +41,7 @@ export default function App() {
         <Route path="/journal" element={<Journal />} />
         <Route path="/statistiques" element={<Statistiques />} />
         <Route path="/historique" element={<Historique />} />
+        <Route path="/dossiers-administratifs" element={<DossiersAdministratifs />} />
         <Route
           path="/utilisateurs"
           element={
@@ -47,6 +50,17 @@ export default function App() {
               fallback={<p className="text-sm text-slate-500">Accès réservé aux administrateurs.</p>}
             >
               <Utilisateurs />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/corbeille"
+          element={
+            <RoleGuard
+              allow={["admin"]}
+              fallback={<p className="text-sm text-slate-500">Accès réservé aux administrateurs.</p>}
+            >
+              <Corbeille />
             </RoleGuard>
           }
         />

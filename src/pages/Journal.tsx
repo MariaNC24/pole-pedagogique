@@ -21,7 +21,7 @@ export default function Journal() {
   async function load() {
     setLoading(true);
     const [{ data: apps }, { data: n }] = await Promise.all([
-      supabase.from("apprenants").select("*").eq("actif", true).order("nom_complet"),
+      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true).order("nom_complet"),
       supabase
         .from("notes_suivi")
         .select("*, profiles(nom, prenom)")

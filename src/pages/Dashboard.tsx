@@ -30,7 +30,7 @@ export default function Dashboard() {
   async function loadStats() {
     const [{ count: apprenantsActifs }, { count: aFaire }, { count: enCours }, { count: presencesJour }] =
       await Promise.all([
-        supabase.from("apprenants").select("*", { count: "exact", head: true }).eq("actif", true),
+        supabase.from("apprenants").select("*", { count: "exact", head: true }).is("deleted_at", null).eq("actif", true),
         supabase.from("evaluations").select("*", { count: "exact", head: true }).eq("statut", "À faire"),
         supabase.from("evaluations").select("*", { count: "exact", head: true }).eq("statut", "En cours"),
         supabase
@@ -53,7 +53,7 @@ export default function Dashboard() {
     setSeuil(seuilActuel);
 
     const [{ data: apps }, { data: absences }, { data: evals }] = await Promise.all([
-      supabase.from("apprenants").select("*").eq("actif", true),
+      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true),
       supabase.from("presences").select("apprenant_id").eq("statut", "absent"),
       supabase
         .from("evaluations")

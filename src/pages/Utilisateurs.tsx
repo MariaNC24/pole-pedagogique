@@ -20,6 +20,23 @@ const roleLabels: Record<Role, string> = {
   pole_administratif: "Pôle administratif",
 };
 
+// supabase-js ne remonte pas automatiquement le message d'erreur détaillé
+// renvoyé par une Edge Function en cas de code HTTP non-2xx (juste un message
+// générique "Edge Function returned a non-2xx status code"). On va lire
+// nous-mêmes le corps de la réponse pour afficher la vraie raison.
+async function messageErreurFonction(error: any, data: any, fallback: string): Promise<string> {
+  if (data?.error) return data.error;
+  if (error?.context && typeof error.context.json === "function") {
+    try {
+      const body = await error.context.json();
+      if (body?.error) return body.error;
+    } catch {
+      // corps illisible, on retombe sur le message générique ci-dessous
+    }
+  }
+  return error?.message || fallback;
+}
+
 export default function Utilisateurs() {
   const { profile: monProfile } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -63,10 +80,8 @@ export default function Utilisateurs() {
     setInviting(false);
 
     if (error || (data as any)?.error) {
-      setMessage({
-        type: "error",
-        text: (data as any)?.error || error?.message || "Erreur lors de l'invitation.",
-      });
+      const text = await messageErreurFonction(error, data, "Erreur lors de l'invitation.");
+      setMessage({ type: "error", text });
       return;
     }
 
@@ -101,7 +116,8 @@ export default function Utilisateurs() {
     });
     setDeletingId(null);
     if (error || (data as any)?.error) {
-      alert((data as any)?.error || error?.message || "Erreur lors de la suppression.");
+      const text = await messageErreurFonction(error, data, "Erreur lors de la suppression.");
+      alert(text);
       return;
     }
     load();

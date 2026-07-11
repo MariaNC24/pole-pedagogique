@@ -9,6 +9,7 @@ import Evaluations from "./pages/Evaluations";
 import Presences from "./pages/Presences";
 import Calendrier from "./pages/Calendrier";
 import Journal from "./pages/Journal";
+import Anomalies from "./pages/Anomalies";
 import Statistiques from "./pages/Statistiques";
 import Historique from "./pages/Historique";
 import DossiersAdministratifs from "./pages/DossiersAdministratifs";
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/presences" element={<Presences />} />
         <Route path="/calendrier" element={<Calendrier />} />
         <Route path="/journal" element={<Journal />} />
+        <Route path="/anomalies" element={<Anomalies />} />
         <Route path="/statistiques" element={<Statistiques />} />
         <Route path="/historique" element={<Historique />} />
         <Route path="/dossiers-administratifs" element={<DossiersAdministratifs />} />

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import PasswordInput from "../components/PasswordInput";
 
@@ -8,6 +9,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -21,7 +23,11 @@ export default function Login() {
           ? "E-mail ou mot de passe incorrect."
           : error.message
       );
+      return;
     }
+    // Connexion réussie : on redirige vers le tableau de bord (sans quoi la
+    // page restait affichée sans rien indiquer, comme si "rien ne se passait").
+    navigate("/", { replace: true });
   }
 
   async function handleForgotPassword() {

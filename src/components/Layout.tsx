@@ -12,6 +12,7 @@ const navItems = [
   { to: "/presences", label: "Présences", roles: ALL_ROLES },
   { to: "/calendrier", label: "Calendrier", roles: ALL_ROLES },
   { to: "/journal", label: "Journal de suivi", roles: ALL_ROLES },
+  { to: "/anomalies", label: "Suivi anomalies", roles: ALL_ROLES },
   { to: "/dossiers-administratifs", label: "Dossiers administratifs", roles: ALL_ROLES },
   { to: "/examen", label: "Examen", roles: ALL_ROLES },
   { to: "/statistiques", label: "Statistiques", roles: ALL_ROLES },

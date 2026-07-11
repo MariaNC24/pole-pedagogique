@@ -160,6 +160,19 @@ export interface SuiviExamen {
   updated_at: string;
 }
 
+export interface SuiviAnomalie {
+  id: string;
+  apprenant_id: string;
+  date_appel: string;
+  statut_appel: "NRP" | "Répondu";
+  decision: string | null;
+  commentaire: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditLogEntry {
   id: string;
   table_cible: string;

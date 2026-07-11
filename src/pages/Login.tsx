@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import PasswordInput from "../components/PasswordInput";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -62,8 +63,7 @@ export default function Login() {
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Mot de passe
             </label>
-            <input
-              type="password"
+            <PasswordInput
               required
               className="input"
               value={password}

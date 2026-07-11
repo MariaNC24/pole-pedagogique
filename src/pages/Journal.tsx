@@ -14,6 +14,7 @@ export default function Journal() {
   const [notes, setNotes] = useState<NoteAvecAuteur[]>([]);
   const [apprenants, setApprenants] = useState<Apprenant[]>([]);
   const [filterApprenant, setFilterApprenant] = useState("");
+  const [search, setSearch] = useState("");
   const [newApprenantId, setNewApprenantId] = useState("");
   const [newContenu, setNewContenu] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,11 @@ export default function Journal() {
     return map;
   }, [apprenants]);
 
+  const apprenantsRecherches = useMemo(
+    () => apprenants.filter((a) => a.nom_complet.toLowerCase().includes(search.toLowerCase())),
+    [apprenants, search]
+  );
+
   const filtered = filterApprenant ? notes.filter((n) => n.apprenant_id === filterApprenant) : notes;
 
   async function addNote(e: FormEvent) {
@@ -66,18 +72,26 @@ export default function Journal() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-slate-900">Journal de suivi</h1>
-        <select
-          className="input max-w-xs"
-          value={filterApprenant}
-          onChange={(e) => setFilterApprenant(e.target.value)}
-        >
-          <option value="">Tous les apprenants</option>
-          {apprenants.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nom_complet}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className="input max-w-xs"
+            placeholder="Rechercher un apprenant..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="input max-w-xs"
+            value={filterApprenant}
+            onChange={(e) => setFilterApprenant(e.target.value)}
+          >
+            <option value="">Tous les apprenants</option>
+            {apprenantsRecherches.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nom_complet}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <RoleGuard allow={["admin", "editor"]}>
@@ -91,7 +105,7 @@ export default function Journal() {
               required
             >
               <option value="">Sélectionner...</option>
-              {apprenants.map((a) => (
+              {apprenantsRecherches.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.nom_complet}
                 </option>

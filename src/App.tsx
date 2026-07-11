@@ -12,6 +12,7 @@ import Journal from "./pages/Journal";
 import Statistiques from "./pages/Statistiques";
 import Historique from "./pages/Historique";
 import DossiersAdministratifs from "./pages/DossiersAdministratifs";
+import Examen from "./pages/Examen";
 import Corbeille from "./pages/Corbeille";
 import Utilisateurs from "./pages/Utilisateurs";
 import Layout from "./components/Layout";
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/statistiques" element={<Statistiques />} />
         <Route path="/historique" element={<Historique />} />
         <Route path="/dossiers-administratifs" element={<DossiersAdministratifs />} />
+        <Route path="/examen" element={<Examen />} />
         <Route
           path="/utilisateurs"
           element={

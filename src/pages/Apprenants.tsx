@@ -8,6 +8,7 @@ import { MODES_FINANCEMENT, type Apprenant, type Groupe } from "../types";
 const emptyForm = {
   id: "",
   nom_complet: "",
+  numero_dossier: "",
   groupe_id: "",
   formateur: "",
   certification_visee: "",
@@ -20,6 +21,7 @@ const emptyForm = {
   telephone: "",
   email: "",
   date_naissance: "",
+  date_expiration_titre_sejour: "",
   heures_totales_prevues: "",
   actif: true,
 };
@@ -82,6 +84,7 @@ export default function Apprenants() {
     setForm({
       id: a.id,
       nom_complet: a.nom_complet,
+      numero_dossier: a.numero_dossier ?? "",
       groupe_id: a.groupe_id ?? "",
       formateur: a.formateur ?? "",
       certification_visee: a.certification_visee ?? "",
@@ -94,6 +97,7 @@ export default function Apprenants() {
       telephone: a.telephone ?? "",
       email: a.email ?? "",
       date_naissance: a.date_naissance ?? "",
+      date_expiration_titre_sejour: a.date_expiration_titre_sejour ?? "",
       heures_totales_prevues: a.heures_totales_prevues != null ? String(a.heures_totales_prevues) : "",
       actif: a.actif,
     });
@@ -114,6 +118,7 @@ export default function Apprenants() {
     setSaving(true);
     const payload = {
       nom_complet: form.nom_complet,
+      numero_dossier: form.numero_dossier || null,
       groupe_id: form.groupe_id || null,
       formateur: form.formateur || null,
       certification_visee: form.certification_visee || null,
@@ -126,6 +131,7 @@ export default function Apprenants() {
       telephone: form.telephone || null,
       email: form.email || null,
       date_naissance: form.date_naissance || null,
+      date_expiration_titre_sejour: form.date_expiration_titre_sejour || null,
       heures_totales_prevues: form.heures_totales_prevues ? Number(form.heures_totales_prevues) : null,
     };
     if (form.id) {
@@ -187,6 +193,7 @@ export default function Apprenants() {
           />
           Afficher les inactifs
         </label>
+        <span className="text-xs text-slate-400">{filtered.length} apprenant(s)</span>
       </div>
 
       {formOpen && (
@@ -198,6 +205,15 @@ export default function Apprenants() {
               required
               value={form.nom_complet}
               onChange={(e) => setForm({ ...form, nom_complet: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Numéro de dossier</label>
+            <input
+              className="input"
+              value={form.numero_dossier}
+              onChange={(e) => setForm({ ...form, numero_dossier: e.target.value })}
             />
           </div>
 
@@ -247,6 +263,15 @@ export default function Apprenants() {
               className="input"
               value={form.date_naissance}
               onChange={(e) => setForm({ ...form, date_naissance: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Expiration du titre de séjour</label>
+            <input
+              type="date"
+              className="input"
+              value={form.date_expiration_titre_sejour}
+              onChange={(e) => setForm({ ...form, date_expiration_titre_sejour: e.target.value })}
             />
           </div>
           <div>

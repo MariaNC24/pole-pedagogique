@@ -57,13 +57,19 @@ Dans **SQL Editor**, nouvelle requête : copier-coller le contenu de `supabase/m
 
 Cela ajoute la possibilité de joindre un PDF à chaque document suivi dans l'onglet Dossiers administratifs (bucket de stockage dédié, créé automatiquement).
 
+## Étape 2 quinquies — Ajouts v5 (pagination, examen, documents requis, suppression d'accès)
+
+Dans **SQL Editor**, nouvelle requête : copier-coller le contenu de `supabase/migrations/0005_ajouts4.sql`, puis **Run**.
+
+Cela ajoute : le numéro de dossier et la date d'expiration du titre de séjour sur la fiche apprenant, la liste fixe des « documents requis » (gérée par les admins, remplace la liste suggérée codée en dur), et le suivi d'examen (mi-parcours, fin de parcours, attente de date d'examen, certification obtenue).
+
 ## Étape 3 — Configurer l'authentification
 
 1. Menu **Authentication > Providers** : vérifier que **Email** est activé (c'est le cas par défaut).
 2. Menu **Authentication > Sign In / Providers > Email** (ou **Auth Settings** selon la version) : désactiver l'option d'**inscription libre** (« Allow new users to sign up ») si elle est proposée — dans cette application, seuls les administrateurs créent des comptes via invitation, il n'y a pas de page d'inscription publique.
 3. Menu **Authentication > URL Configuration** :
-   - **Site URL** : à renseigner à l'étape 6 une fois le site déployé (temporairement, laissez `http://localhost:5173`).
-   - **Redirect URLs** : ajoutez `http://localhost:5173/definir-mot-de-passe` (et vous ajouterez l'adresse définitive à l'étape 6).
+   - **Site URL** : à renseigner à l'étape 6 une fois le site déployé. Important : mettez directement `https://votre-site.netlify.app/definir-mot-de-passe` (avec le chemin `/definir-mot-de-passe` à la fin) — c'est ce qui permet aux liens « Envoyer la récupération du mot de passe » envoyés depuis le tableau de bord Supabase d'amener directement sur le bon formulaire.
+   - **Redirect URLs** : ajoutez `https://votre-site.netlify.app/**` (avec les deux étoiles, pour autoriser toutes les pages du site).
 
 ## Étape 4 — Déployer la fonction d'invitation (Edge Function)
 
@@ -83,16 +89,17 @@ Cette petite fonction est ce qui permet à Clara d'inviter quelqu'un par e-mail 
    supabase link --project-ref VOTRE_REF_DE_PROJET
    ```
    La référence du projet se trouve dans **Project Settings > General > Reference ID**.
-4. Déployer la fonction :
+4. Déployer les fonctions :
    ```
    supabase functions deploy invite-user
+   supabase functions deploy delete-user
    ```
 5. Une fois le site déployé (étape 6), définir l'adresse du site pour que les e-mails d'invitation pointent au bon endroit :
    ```
-   supabase secrets set SITE_URL=https://votre-site.vercel.app
+   supabase secrets set SITE_URL=https://votre-site.netlify.app
    ```
 
-> Si personne dans l'équipe n'est à l'aise avec ces commandes, n'importe quel prestataire technique peut effectuer cette étape 4 en 5 minutes à partir des fichiers fournis — c'est la seule étape qui nécessite un terminal.
+> Sans terminal disponible : les deux fonctions (`invite-user` et, depuis la v5, `delete-user`) peuvent être déployées directement depuis le tableau de bord Supabase, menu **Edge Functions > Deploy a new function > Via Editor**, en collant le contenu de `supabase/functions/invite-user/index.ts` puis de `supabase/functions/delete-user/index.ts`. C'est la méthode utilisée pour ce site (aucune installation locale nécessaire).
 
 ## Étape 5 — Créer le premier compte : Clara Galanis (administratrice)
 
@@ -152,6 +159,14 @@ Le site est maintenant en ligne, accessible depuis un ordinateur ou un télépho
 - **Filtre par groupe** : sur la page Apprenants et sur la feuille de présence, un menu déroulant permet de filtrer par groupe (mois/année).
 - **Heures totales et heures restantes** : en créant ou modifiant un apprenant, vous pouvez indiquer le nombre d'heures total qu'il doit faire ; le site calcule automatiquement combien il lui reste, à partir des présences enregistrées.
 - **Calendrier enrichi** : affiche aussi les séances de cours (jours où une présence a été enregistrée) ; cliquer sur un jour montre qui était présent, absent ou en retard ce jour-là.
+- **Pagination (v5)** : la feuille de présence, le tableau des totaux et les dossiers administratifs affichent 10 apprenants à la fois, avec des numéros de page et des flèches précédent/suivant — pensé pour rester rapide même avec des milliers d'apprenants. Le tableau des totaux peut aussi être trié en cliquant sur les en-têtes de colonnes.
+- **Dossiers administratifs, deux sous-onglets (v5)** :
+  - *Documents requis* : les administrateurs et le pôle administratif définissent librement la liste des documents demandés à **tous** les apprenants (plus de liste codée en dur).
+  - *Dossiers apprenants* : recherche + pagination, avec le numéro de dossier et la date de naissance affichés. Chaque apprenant affiche un badge « X/Y documents » ou « Dossier complet » ; en cliquant, le détail montre précisément quels documents manquent. Un document spécifique à un seul apprenant (hors liste requise) peut toujours être ajouté en plus.
+- **Onglet Examen (v5)** : alerte automatique dès qu'un apprenant atteint 50 % de ses heures (test de mi-parcours) puis 95 % (test de fin de parcours) — avec un bouton pour marquer le test comme fait. À 100 %, l'apprenant passe dans un tableau « Attente date d'examen » (date/jour souhaité + commentaire modifiables). Une fois le résultat renseigné (niveau CECRL obtenu), il bascule dans « Certifications obtenues ». Alerte également si le titre de séjour d'un apprenant expire dans moins de 2 mois (visible ici et sur le tableau de bord).
+- **Numéro de dossier (v5)** : nouveau champ sur la fiche apprenant, affiché dans les dossiers administratifs pour retrouver facilement un dossier.
+- **Suppression d'accès (v5)** : dans **Équipe**, un administrateur peut désormais supprimer définitivement l'accès d'un membre (en plus d'ajouter). Impossible de supprimer son propre accès depuis cette page.
+- **Session persistante** : une fois son mot de passe défini via le lien reçu par e-mail, chacun se reconnecte simplement avec son e-mail et son mot de passe — la session reste active automatiquement d'une visite à l'autre, sur ordinateur comme sur téléphone.
 
 ## À propos de la limite gratuite Supabase
 

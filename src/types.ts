@@ -49,6 +49,10 @@ export interface Apprenant {
   email: string | null;
   date_naissance: string | null;
   heures_totales_prevues: number | null;
+  numero_dossier: string | null;
+  date_expiration_titre_sejour: string | null;
+  test_mi_parcours_fait: boolean;
+  test_fin_parcours_fait: boolean;
   actif: boolean;
   deleted_at: string | null;
   created_at: string;
@@ -92,6 +96,7 @@ export interface TotauxApprenant {
   total_heures: number;
   heures_totales_prevues: number | null;
   heures_restantes: number | null;
+  pourcentage_avancement: number | null;
 }
 
 export interface Parametres {
@@ -124,6 +129,7 @@ export interface DocumentAdministratif {
   id: string;
   apprenant_id: string;
   nom_document: string;
+  document_requis_id: string | null;
   statut: "manquant" | "recu" | "a_mettre_a_jour";
   commentaire: string | null;
   chemin_storage: string | null;
@@ -131,6 +137,25 @@ export interface DocumentAdministratif {
   taille_octets: number | null;
   type_mime: string | null;
   fichier_ajoute_at: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+export interface DocumentRequis {
+  id: string;
+  nom: string;
+  ordre: number;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface SuiviExamen {
+  apprenant_id: string;
+  date_souhaitee: string | null;
+  commentaire: string | null;
+  statut: "attente" | "obtenu";
+  niveau_obtenu: string | null;
+  date_obtention: string | null;
   updated_by: string | null;
   updated_at: string;
 }

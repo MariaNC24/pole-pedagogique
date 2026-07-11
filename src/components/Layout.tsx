@@ -13,6 +13,7 @@ const navItems = [
   { to: "/calendrier", label: "Calendrier", roles: ALL_ROLES },
   { to: "/journal", label: "Journal de suivi", roles: ALL_ROLES },
   { to: "/dossiers-administratifs", label: "Dossiers administratifs", roles: ALL_ROLES },
+  { to: "/examen", label: "Examen", roles: ALL_ROLES },
   { to: "/statistiques", label: "Statistiques", roles: ALL_ROLES },
   { to: "/utilisateurs", label: "Équipe", roles: ["admin"] },
   { to: "/corbeille", label: "Corbeille", roles: ["admin"] },

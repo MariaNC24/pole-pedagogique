@@ -3,10 +3,18 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import RoleGuard from "../components/RoleGuard";
-import type { Apprenant, Evaluation, Parametres, Presence } from "../types";
+import type { Apprenant, Evaluation, Parametres, Presence, TotauxApprenant } from "../types";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function joursRestants(dateStr: string): number {
+  const cible = new Date(dateStr);
+  const aujourdhui = new Date();
+  aujourdhui.setHours(0, 0, 0, 0);
+  cible.setHours(0, 0, 0, 0);
+  return Math.round((cible.getTime() - aujourdhui.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 interface AlerteAbsence {
@@ -26,6 +34,9 @@ export default function Dashboard() {
   const [evaluationsRetard, setEvaluationsRetard] = useState<(Evaluation & { nom_complet: string })[]>([]);
   const [seuil, setSeuil] = useState(3);
   const [savingSeuil, setSavingSeuil] = useState(false);
+  const [alertesMiParcours, setAlertesMiParcours] = useState<Apprenant[]>([]);
+  const [alertesFinParcours, setAlertesFinParcours] = useState<Apprenant[]>([]);
+  const [alertesTitreSejour, setAlertesTitreSejour] = useState<{ apprenant: Apprenant; jours: number }[]>([]);
 
   async function loadStats() {
     const [{ count: apprenantsActifs }, { count: aFaire }, { count: enCours }, { count: presencesJour }] =
@@ -78,6 +89,31 @@ export default function Dashboard() {
 
     setEvaluationsRetard(
       ((evals as any[]) ?? []).map((e) => ({ ...e, nom_complet: e.apprenants?.nom_complet ?? "—" }))
+    );
+
+    const { data: tot } = await supabase.from("vue_totaux_apprenants").select("*");
+    const pctById: Record<string, number | null> = {};
+    ((tot as TotauxApprenant[]) ?? []).forEach((t) => (pctById[t.apprenant_id] = t.pourcentage_avancement));
+
+    const actifs = (apps as Apprenant[]) ?? [];
+    setAlertesMiParcours(
+      actifs.filter((a) => {
+        const pct = pctById[a.id];
+        return pct != null && pct >= 50 && !a.test_mi_parcours_fait;
+      })
+    );
+    setAlertesFinParcours(
+      actifs.filter((a) => {
+        const pct = pctById[a.id];
+        return pct != null && pct >= 95 && !a.test_fin_parcours_fait;
+      })
+    );
+    setAlertesTitreSejour(
+      actifs
+        .filter((a) => a.date_expiration_titre_sejour)
+        .map((a) => ({ apprenant: a, jours: joursRestants(a.date_expiration_titre_sejour as string) }))
+        .filter((x) => x.jours <= 60)
+        .sort((x, y) => x.jours - y.jours)
     );
   }
 
@@ -165,6 +201,60 @@ export default function Dashboard() {
                 <li key={e.id} className="flex justify-between">
                   <span>{e.nom_complet}</span>
                   <span className="text-amber-600">prévue le {e.date_prevue}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="mb-3 font-medium text-slate-800">🟡 Tests mi-parcours à faire (≥ 50%)</h2>
+          {alertesMiParcours.length === 0 ? (
+            <p className="text-sm text-slate-400">Aucune alerte.</p>
+          ) : (
+            <ul className="space-y-1 text-sm">
+              {alertesMiParcours.map((a) => (
+                <li key={a.id}>
+                  <Link to={`/examen`} className="text-brand-600 hover:underline">
+                    {a.nom_complet}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="mb-3 font-medium text-slate-800">🟠 Tests fin de parcours à faire (≥ 95%)</h2>
+          {alertesFinParcours.length === 0 ? (
+            <p className="text-sm text-slate-400">Aucune alerte.</p>
+          ) : (
+            <ul className="space-y-1 text-sm">
+              {alertesFinParcours.map((a) => (
+                <li key={a.id}>
+                  <Link to={`/examen`} className="text-brand-600 hover:underline">
+                    {a.nom_complet}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="mb-3 font-medium text-slate-800">🛂 Titres de séjour — expiration proche</h2>
+          {alertesTitreSejour.length === 0 ? (
+            <p className="text-sm text-slate-400">Aucune alerte.</p>
+          ) : (
+            <ul className="space-y-1 text-sm">
+              {alertesTitreSejour.map(({ apprenant, jours }) => (
+                <li key={apprenant.id} className="flex justify-between">
+                  <Link to={`/examen`} className="text-brand-600 hover:underline">
+                    {apprenant.nom_complet}
+                  </Link>
+                  <span className={jours < 0 ? "text-red-600" : "text-amber-600"}>
+                    {jours < 0 ? `expiré depuis ${Math.abs(jours)} j` : `dans ${jours} j`}
+                  </span>
                 </li>
               ))}
             </ul>

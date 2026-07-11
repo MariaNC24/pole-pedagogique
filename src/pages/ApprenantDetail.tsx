@@ -168,6 +168,10 @@ export default function ApprenantDetail() {
         <h2 className="mb-3 font-medium text-slate-800">Informations</h2>
         <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
           <div>
+            <dt className="text-slate-400">Numéro de dossier</dt>
+            <dd className="text-slate-700">{apprenant.numero_dossier || "—"}</dd>
+          </div>
+          <div>
             <dt className="text-slate-400">Niveau CECRL initial</dt>
             <dd className="text-slate-700">{apprenant.niveau_cecrl_initial || "—"}</dd>
           </div>
@@ -206,6 +210,10 @@ export default function ApprenantDetail() {
           <div>
             <dt className="text-slate-400">Mode de financement</dt>
             <dd className="text-slate-700">{apprenant.mode_financement || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Expiration du titre de séjour</dt>
+            <dd className="text-slate-700">{apprenant.date_expiration_titre_sejour || "—"}</dd>
           </div>
         </dl>
         <RoleGuard allow={["admin", "editor"]}>

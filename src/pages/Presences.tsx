@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import RoleGuard from "../components/RoleGuard";
+import Pagination from "../components/Pagination";
 import type { Apprenant, Groupe, Presence, TotauxApprenant } from "../types";
 
 const STATUTS: { value: Presence["statut"]; label: string }[] = [
@@ -10,6 +11,10 @@ const STATUTS: { value: Presence["statut"]; label: string }[] = [
   { value: "retard", label: "Retard" },
   { value: "absence_justifiee", label: "Absence justifiée" },
 ];
+
+const PAGE_SIZE = 10;
+
+type TriColonne = "nom_complet" | "total_jours_presence" | "total_heures" | "heures_totales_prevues" | "heures_restantes";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -38,11 +43,19 @@ export default function Presences() {
   const [searchTotaux, setSearchTotaux] = useState("");
   const [searchApprenant, setSearchApprenant] = useState("");
   const [filterGroupe, setFilterGroupe] = useState("");
+  const [filterGroupeTotaux, setFilterGroupeTotaux] = useState("");
+  const [pageEmargement, setPageEmargement] = useState(1);
+  const [pageTotaux, setPageTotaux] = useState(1);
+  const [tri, setTri] = useState<{ col: TriColonne; dir: "asc" | "desc" }>({
+    col: "nom_complet",
+    dir: "asc",
+  });
 
   async function loadApprenantsEtPresences() {
     setLoading(true);
     const [{ data: apps }, { data: gr }, { data: pres }] = await Promise.all([
-      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true).order("nom_complet"),
+      // Ordre d'ajout (création) pour l'émargement, comme demandé.
+      supabase.from("apprenants").select("*").is("deleted_at", null).eq("actif", true).order("created_at", { ascending: true }),
       supabase.from("groupes").select("*").is("deleted_at", null).order("nom"),
       supabase.from("presences").select("*").eq("date", date),
     ]);
@@ -137,13 +150,35 @@ export default function Presences() {
     }
   }
 
-  const totauxFiltres = useMemo(
-    () =>
-      totaux.filter((t) =>
-        t.nom_complet.toLowerCase().includes(searchTotaux.toLowerCase())
-      ),
-    [totaux, searchTotaux]
-  );
+  const groupeIdByNom = useMemo(() => {
+    const map: Record<string, string> = {};
+    apprenants.forEach((a) => {
+      if (a.groupe_id) map[a.id] = a.groupe_id;
+    });
+    return map;
+  }, [apprenants]);
+
+  const totauxFiltres = useMemo(() => {
+    let list = totaux.filter((t) =>
+      t.nom_complet.toLowerCase().includes(searchTotaux.toLowerCase())
+    );
+    if (filterGroupeTotaux) {
+      list = list.filter((t) => groupeIdByNom[t.apprenant_id] === filterGroupeTotaux);
+    }
+    const dir = tri.dir === "asc" ? 1 : -1;
+    list = [...list].sort((a, b) => {
+      const va = a[tri.col];
+      const vb = b[tri.col];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (typeof va === "string" || typeof vb === "string") {
+        return String(va).localeCompare(String(vb), "fr") * dir;
+      }
+      return (Number(va) - Number(vb)) * dir;
+    });
+    return list;
+  }, [totaux, searchTotaux, filterGroupeTotaux, groupeIdByNom, tri]);
 
   const apprenantsConcernes = useMemo(() => {
     return apprenants.filter((a) => {
@@ -153,6 +188,29 @@ export default function Presences() {
       return true;
     });
   }, [apprenants, filterGroupe, searchApprenant]);
+
+  useEffect(() => {
+    setPageEmargement(1);
+  }, [searchApprenant, filterGroupe, date]);
+
+  useEffect(() => {
+    setPageTotaux(1);
+  }, [searchTotaux, filterGroupeTotaux]);
+
+  const emargementPage = apprenantsConcernes.slice(
+    (pageEmargement - 1) * PAGE_SIZE,
+    pageEmargement * PAGE_SIZE
+  );
+  const totauxPage = totauxFiltres.slice((pageTotaux - 1) * PAGE_SIZE, pageTotaux * PAGE_SIZE);
+
+  function toggleTri(col: TriColonne) {
+    setTri((t) => (t.col === col ? { col, dir: t.dir === "asc" ? "desc" : "asc" } : { col, dir: "asc" }));
+  }
+
+  function flecheTri(col: TriColonne) {
+    if (tri.col !== col) return "";
+    return tri.dir === "asc" ? " ▲" : " ▼";
+  }
 
   return (
     <div className="space-y-8">
@@ -187,7 +245,7 @@ export default function Presences() {
             ))}
           </select>
           <span className="text-xs text-slate-400">
-            Seuls les apprenants affichés ci-dessous seront concernés par l'émargement du jour.
+            {apprenantsConcernes.length} apprenant(s) concerné(s) par l'émargement du jour.
           </span>
         </div>
 
@@ -210,7 +268,7 @@ export default function Presences() {
                 </tr>
               </thead>
               <tbody>
-                {apprenantsConcernes.map((a) => {
+                {emargementPage.map((a) => {
                   const p = presences[a.id];
                   return (
                     <tr key={a.id} className="border-t border-slate-100">
@@ -279,6 +337,12 @@ export default function Presences() {
               </tbody>
             </table>
           )}
+          <Pagination
+            page={pageEmargement}
+            totalItems={apprenantsConcernes.length}
+            pageSize={PAGE_SIZE}
+            onChange={setPageEmargement}
+          />
         </div>
         <RoleGuard allow={["viewer"]}>
           <p className="mt-2 text-xs text-slate-400">
@@ -292,27 +356,60 @@ export default function Presences() {
           <h2 className="text-lg font-semibold text-slate-900">
             Total jours et heures par apprenant
           </h2>
-          <input
-            className="input max-w-xs"
-            placeholder="Rechercher un nom..."
-            value={searchTotaux}
-            onChange={(e) => setSearchTotaux(e.target.value)}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              className="input max-w-xs"
+              placeholder="Rechercher un nom..."
+              value={searchTotaux}
+              onChange={(e) => setSearchTotaux(e.target.value)}
+            />
+            <select
+              className="input max-w-xs"
+              value={filterGroupeTotaux}
+              onChange={(e) => setFilterGroupeTotaux(e.target.value)}
+            >
+              <option value="">Tous les groupes</option>
+              {groupes.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nom}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="card overflow-x-auto p-0">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
               <tr>
-                <th className="px-4 py-2">Apprenant</th>
+                <th className="cursor-pointer select-none px-4 py-2" onClick={() => toggleTri("nom_complet")}>
+                  Apprenant{flecheTri("nom_complet")}
+                </th>
                 <th className="px-4 py-2">Groupe / Mois</th>
-                <th className="px-4 py-2">Jours de présence</th>
-                <th className="px-4 py-2">Heures faites</th>
-                <th className="px-4 py-2">Heures totales à faire</th>
-                <th className="px-4 py-2">Heures restantes</th>
+                <th
+                  className="cursor-pointer select-none px-4 py-2"
+                  onClick={() => toggleTri("total_jours_presence")}
+                >
+                  Jours de présence{flecheTri("total_jours_presence")}
+                </th>
+                <th className="cursor-pointer select-none px-4 py-2" onClick={() => toggleTri("total_heures")}>
+                  Heures faites{flecheTri("total_heures")}
+                </th>
+                <th
+                  className="cursor-pointer select-none px-4 py-2"
+                  onClick={() => toggleTri("heures_totales_prevues")}
+                >
+                  Heures totales à faire{flecheTri("heures_totales_prevues")}
+                </th>
+                <th
+                  className="cursor-pointer select-none px-4 py-2"
+                  onClick={() => toggleTri("heures_restantes")}
+                >
+                  Heures restantes{flecheTri("heures_restantes")}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {totauxFiltres.map((t) => (
+              {totauxPage.map((t) => (
                 <tr key={t.apprenant_id} className="border-t border-slate-100">
                   <td className="px-4 py-2 font-medium text-slate-800">{t.nom_complet}</td>
                   <td className="px-4 py-2 text-slate-600">{t.groupe || "—"}</td>
@@ -328,6 +425,12 @@ export default function Presences() {
               ))}
             </tbody>
           </table>
+          <Pagination
+            page={pageTotaux}
+            totalItems={totauxFiltres.length}
+            pageSize={PAGE_SIZE}
+            onChange={setPageTotaux}
+          />
         </div>
         <p className="mt-2 text-xs text-slate-400">
           Calculé automatiquement à partir de la feuille de présence (mis à jour en direct).

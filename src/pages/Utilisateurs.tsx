@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 import type { Profile, Role } from "../types";
 
 interface Invitation {
@@ -20,9 +21,11 @@ const roleLabels: Record<Role, string> = {
 };
 
 export default function Utilisateurs() {
+  const { profile: monProfile } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
@@ -82,6 +85,25 @@ export default function Utilisateurs() {
 
   async function toggleActif(p: Profile) {
     await supabase.from("profiles").update({ actif: !p.actif }).eq("id", p.id);
+    load();
+  }
+
+  async function supprimerAcces(p: Profile) {
+    if (
+      !confirm(
+        `Supprimer définitivement l'accès de ${p.prenom} ${p.nom} (${p.email}) ? Cette personne ne pourra plus se connecter. Cette action est irréversible.`
+      )
+    )
+      return;
+    setDeletingId(p.id);
+    const { data, error } = await supabase.functions.invoke("delete-user", {
+      body: { userId: p.id },
+    });
+    setDeletingId(null);
+    if (error || (data as any)?.error) {
+      alert((data as any)?.error || error?.message || "Erreur lors de la suppression.");
+      return;
+    }
     load();
   }
 
@@ -224,9 +246,18 @@ export default function Utilisateurs() {
                       </span>
                     </td>
                     <td className="px-4 py-2 text-right">
-                      <button className="text-slate-500 hover:underline" onClick={() => toggleActif(p)}>
+                      <button className="mr-3 text-slate-500 hover:underline" onClick={() => toggleActif(p)}>
                         {p.actif ? "Désactiver" : "Réactiver"}
                       </button>
+                      {monProfile?.id !== p.id && (
+                        <button
+                          className="text-red-500 hover:underline disabled:opacity-50"
+                          disabled={deletingId === p.id}
+                          onClick={() => supprimerAcces(p)}
+                        >
+                          {deletingId === p.id ? "Suppression..." : "Supprimer l'accès"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

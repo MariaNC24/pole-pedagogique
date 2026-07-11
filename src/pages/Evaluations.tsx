@@ -15,6 +15,7 @@ export default function Evaluations() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterApprenant, setFilterApprenant] = useState("");
+  const [search, setSearch] = useState("");
   const [savingIds, setSavingIds] = useState<Record<string, boolean>>({});
   const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
   const [newApprenantId, setNewApprenantId] = useState("");
@@ -58,6 +59,11 @@ export default function Evaluations() {
     return map;
   }, [apprenants]);
 
+  const apprenantsRecherches = useMemo(
+    () => apprenants.filter((a) => a.nom_complet.toLowerCase().includes(search.toLowerCase())),
+    [apprenants, search]
+  );
+
   const filtered = useMemo(
     () =>
       filterApprenant
@@ -99,18 +105,26 @@ export default function Evaluations() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-slate-900">Suivi pédagogique — Évaluations</h1>
-        <select
-          className="input max-w-xs"
-          value={filterApprenant}
-          onChange={(e) => setFilterApprenant(e.target.value)}
-        >
-          <option value="">Tous les apprenants</option>
-          {apprenants.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nom_complet}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className="input max-w-xs"
+            placeholder="Rechercher un apprenant..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="input max-w-xs"
+            value={filterApprenant}
+            onChange={(e) => setFilterApprenant(e.target.value)}
+          >
+            <option value="">Tous les apprenants</option>
+            {apprenantsRecherches.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nom_complet}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <RoleGuard allow={["admin", "editor"]}>
@@ -121,7 +135,7 @@ export default function Evaluations() {
             onChange={(e) => setNewApprenantId(e.target.value)}
           >
             <option value="">Sélectionner un apprenant...</option>
-            {apprenants.map((a) => (
+            {apprenantsRecherches.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.nom_complet}
               </option>
